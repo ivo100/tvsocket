@@ -37,7 +37,7 @@ func TestSocket_RequestQuotes(t *testing.T) {
 	tv.Close()
 }
 
-func OnReceiveQuote(symbol string, hloc []HLOC) {
+func OnReceiveQuote(symbol string, hloc []TOHLCV) {
 	fmt.Printf(">>> OnReceiveQuote\n")
 	for _, v := range hloc {
 		tm := time.Unix(v.Time, 0)

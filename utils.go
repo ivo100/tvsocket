@@ -3,8 +3,20 @@ package tvsocket
 import (
 	"encoding/json"
 	"math/rand"
+	"strings"
 	"time"
 )
+
+var NewYork *time.Location
+
+func DateTimeStr(dt time.Time) string {
+	if NewYork == nil {
+		NewYork, _ = time.LoadLocation("America/New_York")
+	}
+	t := dt.In(NewYork).Format(time.RFC3339)[0:19]
+	t = strings.ReplaceAll(t, "T", " ")
+	return t
+}
 
 // GetRandomString ...
 func GetRandomString(length int) string {

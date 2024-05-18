@@ -25,6 +25,7 @@ type Socket struct {
 	quoteSessionID              string
 	chartSessionID              string
 	chartSessionName            string
+	Symbol                      string
 }
 
 // Connect - Connects and returns the trading view socket object
@@ -49,7 +50,7 @@ func (s *Socket) Init(fields ...string) (err error) {
 	s.chartSessionName = "price"
 	s.quoteSessionID = s.generateSessionID(true)
 	s.chartSessionID = s.generateSessionID(false)
-	fmt.Printf("Session IDs: %s %s\n", s.quoteSessionID, s.chartSessionID)
+	//fmt.Printf("Session IDs: %s %s\n", s.quoteSessionID, s.chartSessionID)
 	//fmt.Printf("Connecting to %s\n", TradingViewSocketURL)
 	if s.conn, _, err = (&websocket.Dialer{}).Dial(TradingViewSocketURL, getHeaders()); err != nil {
 		if s.OnErrorCallback != nil {
@@ -125,7 +126,8 @@ func (s *Socket) RequestQuotes(symbol string, bars int, interval string, onRecei
 	if err != nil {
 		return err
 	}
-
+	// single sync operation for now
+	s.Symbol = symbol
 	// 3. Create series
 	//time.Sleep(2 * time.Second)
 	err = s.sendSocketMessage(
@@ -275,11 +277,11 @@ func (s *Socket) parsePacket(packet []byte) {
 			fmt.Printf("> parseJSON error %s\n", err.Error())
 			continue
 		}
-		hloc, ok := data.([]HLOC)
+		hloc, ok := data.([]TOHLCV)
 		if ok {
 			//fmt.Printf(">>> Received %s - %+v\n", symbol, x)
 			if s.OnReceiveQuoteCallback != nil {
-				s.OnReceiveQuoteCallback(symbol, hloc)
+				s.OnReceiveQuoteCallback(s.Symbol, hloc)
 			}
 			continue
 		}
@@ -290,9 +292,10 @@ func (s *Socket) parsePacket(packet []byte) {
 		dataArr = append(dataArr, data.(*QuoteData))
 		symbolsArr = append(symbolsArr, symbol)
 	}
-
+	if s.OnReceiveMarketDataCallback == nil {
+		return
+	}
 	// TODO: fix this nested loop !!!
-
 	for i := 0; i < len(dataArr); i++ {
 		isDuplicate := false
 		for j := i + 1; j < len(dataArr); j++ {
@@ -370,7 +373,7 @@ func (s *Socket) parseJSON(payload []byte) (symbol string, data any, err error) 
 	return symbol, data, nil
 }
 
-func parseTimeScaleUpdate(payload []byte) (sym string, hloc []HLOC, err error) {
+func parseTimeScaleUpdate(payload []byte) (sym string, hloc []TOHLCV, err error) {
 	d := make(map[string]any)
 	err = json.Unmarshal(payload, &d)
 	if err != nil {
@@ -395,12 +398,12 @@ func parseTimeScaleUpdate(payload []byte) (sym string, hloc []HLOC, err error) {
 		return
 	}
 
-	hloc = make([]HLOC, 0)
+	hloc = make([]TOHLCV, 0)
 	for _, v := range a.([]any) {
 		amap = v.(map[string]any)
 		//i := int((amap["i"]).(float64))
 		vals := (amap["v"]).([]any)
-		var h HLOC
+		var h TOHLCV
 		for j, val := range vals {
 			switch j {
 			case 0:

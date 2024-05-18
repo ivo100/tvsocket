@@ -15,6 +15,21 @@ type SocketInterface interface {
 	RequestQuotes(symbol string, bars int, interval string, resultCallback OnReceiveQuoteCallback) error
 }
 
+type TOHLCV struct {
+	Time   int64   `json:"time"`
+	Open   float64 `json:"open"`
+	High   float64 `json:"high"`
+	Low    float64 `json:"low"`
+	Close  float64 `json:"close"`
+	Volume int64   `json:"volume"`
+}
+
+func (t *TOHLCV) String() string {
+	return fmt.Sprintf("%s  %7.2f  %7.2f  %7.2f  %7.2f  %7d",
+		DateTimeStr(time.Unix(t.Time, 0)),
+		t.Open, t.High, t.Low, t.Close, t.Volume)
+}
+
 // SocketMessage ...
 type SocketMessage struct {
 	Message string      `json:"m"`
@@ -55,7 +70,7 @@ type Flags struct {
 // OnReceiveDataCallback ...
 type OnReceiveDataCallback func(symbol string, data *QuoteData)
 
-type OnReceiveQuoteCallback func(symbol string, hloc []HLOC)
+type OnReceiveQuoteCallback func(symbol string, hloc []TOHLCV)
 
 // OnErrorCallback ...
 type OnErrorCallback func(err error, context string)
