@@ -44,3 +44,21 @@ const FinalPayloadHasMissingPropertiesErrorContext = "The final JSON payload doe
 
 // ReadMessageErrorContext ...
 const ReadMessageErrorContext = "Error while reading new messages through the socket connection"
+
+var Periods = []string{
+	"1",
+	"3",
+	"5",
+	"15",
+	"45",
+	"1h",
+	"2h",
+	"3h",
+	"4h",
+	"1D",
+	"1W",
+	"1M",
+	"3M",
+	"6M",
+	"12M",
+}

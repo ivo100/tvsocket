@@ -8,6 +8,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -424,7 +425,10 @@ func parseTimeScaleUpdate(payload []byte) (sym string, hloc []HLOC, err error) {
 }
 
 func (s *Socket) onError(err error, context string) {
-	fmt.Printf("ONERROR Error: %v\n", err)
+	if strings.Contains(err.Error(), "closed") {
+		return
+	}
+	//fmt.Printf("ONERROR Error: %v\n", err)
 	if s.conn != nil {
 		_ = s.conn.Close()
 	}
