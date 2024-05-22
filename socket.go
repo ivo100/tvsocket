@@ -50,7 +50,7 @@ func (s *Socket) Init(fields ...string) (err error) {
 	s.chartSessionName = "price"
 	s.quoteSessionID = s.generateSessionID(true)
 	s.chartSessionID = s.generateSessionID(false)
-	//fmt.Printf("Session IDs: %s %s\n", s.quoteSessionID, s.chartSessionID)
+	fmt.Printf("Session IDs: %s %s\n", s.quoteSessionID, s.chartSessionID)
 	//fmt.Printf("Connecting to %s\n", TradingViewSocketURL)
 	if s.conn, _, err = (&websocket.Dialer{}).Dial(TradingViewSocketURL, getHeaders()); err != nil {
 		if s.OnErrorCallback != nil {
@@ -91,11 +91,33 @@ func (s *Socket) Close() (err error) {
 // AddSymbol ...
 func (s *Socket) AddSymbol(symbol string) (err error) {
 	err = s.sendSocketMessage(
-		//getSocketMessage("quote_add_symbols", []any{s.quoteSessionID, symbol, getFlags()}),
 		getSocketMessage("quote_add_symbols", []any{s.quoteSessionID, symbol}),
 	)
-	return
+	if err != nil {
+		fmt.Printf("Error while sending quote_add_symbols: %v\n", err)
+	}
+	//m := getSocketMessage("quote_fast_symbols", []any{
+	//	s.quoteSessionID,
+	//	symbol,
+	//	`={"adjustment":"dividends","currency-id":"USD","session":"extended","settlement-as-close":false}`})
+	//err = s.sendSocketMessage(m)
+	//fmt.Printf("Error while sending quote_fast_symbols: %v\n", err)
+	return err
 }
+
+/*
+		`={"adjustment":"splits","currency-id":"USD","settlement-as-close":false,"symbol":"BATS:MSFT"}`,
+
+{
+  "m": "quote_fast_symbols",
+  "p": [
+    "qs_9oiruOcoLaJc",
+    "={\"adjustment\":\"splits\",\"currency-id\":\"USD\",\"settlement-as-close\":false,\"symbol\":\"BATS:MSFT\"}",
+    "NASDAQ:MSFT",
+    "={\"adjustment\":\"dividends\",\"currency-id\":\"USD\",\"session\":\"extended\",\"settlement-as-close\":false,\"symbol\":\"BATS:MSFT\"}"
+  ]
+}
+*/
 
 // RemoveSymbol ...
 func (s *Socket) RemoveSymbol(symbol string) (err error) {
@@ -128,13 +150,14 @@ func (s *Socket) RequestQuotes(symbol string, bars int, interval string, onRecei
 	}
 	// single sync operation for now
 	s.Symbol = symbol
-	// 3. Create series
-	//time.Sleep(2 * time.Second)
+
+	// 3. Create series (NB: works for ADD but not for stocks)
 	err = s.sendSocketMessage(
 		getSocketMessage("create_series", []any{
 			s.chartSessionID,
-			s.chartSessionName,
-			s.chartSessionName,
+			//s.chartSessionName,
+			"price", "ask",
+			//s.chartSessionName,
 			"symbol_1",
 			interval,
 			bars,
