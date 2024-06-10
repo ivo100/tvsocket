@@ -50,7 +50,7 @@ func (s *Socket) Init(fields ...string) (err error) {
 	s.chartSessionName = "price"
 	s.quoteSessionID = s.generateSessionID(true)
 	s.chartSessionID = s.generateSessionID(false)
-	fmt.Printf("Session IDs: %s %s\n", s.quoteSessionID, s.chartSessionID)
+	//fmt.Printf("Session IDs: %s %s\n", s.quoteSessionID, s.chartSessionID)
 	//fmt.Printf("Connecting to %s\n", TradingViewSocketURL)
 	if s.conn, _, err = (&websocket.Dialer{}).Dial(TradingViewSocketURL, getHeaders()); err != nil {
 		if s.OnErrorCallback != nil {
